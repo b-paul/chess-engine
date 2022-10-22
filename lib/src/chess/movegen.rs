@@ -108,9 +108,7 @@ impl ChessBoard {
             ChessSide::Black => -8,
         };
         let single_pushes = our_pawns.shift1(push_shift) & !self.side_bb[!self.turn];
-        let mut single_pushes_iter = single_pushes;
-        while !single_pushes_iter.is_empty() {
-            let to = single_pushes_iter.poplsb();
+        for to in single_pushes.lsb_iter() {
             make_pawn_move((to as i8 - push_shift) as u16, to as u16, mv_list);
         }
         // Double pushes
@@ -118,9 +116,8 @@ impl ChessBoard {
             ChessSide::White => 0xFF0000,
             ChessSide::Black => 0xFF00000000,
         };
-        let mut double_pushes_iter = (single_pushes & third_rank).shift1(push_shift);
-        while !double_pushes_iter.is_empty() {
-            let to = double_pushes_iter.poplsb();
+        let double_pushes = (single_pushes & third_rank).shift1(push_shift);
+        for to in double_pushes.lsb_iter() {
             make_pawn_move((to as i8 - 2 * push_shift) as u16, to as u16, mv_list);
         }
         // Captures
@@ -129,9 +126,8 @@ impl ChessBoard {
             ChessSide::Black => [-7, -9],
         };
         for shift in capture_shifts {
-            let mut captures_iter = our_pawns.shift1(shift) & self.side_bb[!self.turn];
-            while !captures_iter.is_empty() {
-                let to = captures_iter.poplsb();
+            let captures = our_pawns.shift1(shift) & self.side_bb[!self.turn];
+            for to in captures.lsb_iter() {
                 make_pawn_move((to as i8 - shift) as u16, to as u16, mv_list);
             }
         }
@@ -143,15 +139,12 @@ impl ChessBoard {
             GenType::Quiet => !self.side_bb[self.turn],
             GenType::Noisy => self.side_bb[!self.turn],
         };
-        let mut knights = self.piece_bb[Piece::from((PieceType::Knight, self.turn))];
+        let knights = self.piece_bb[Piece::from((PieceType::Knight, self.turn))];
 
-        while !knights.is_empty() {
-            let from = knights.poplsb() as u8;
+        for from in knights.lsb_iter() {
+            let attacks = target_squares & get_knight_attacks(from as u8);
 
-            let mut attacks = target_squares & get_knight_attacks(from);
-
-            while !attacks.is_empty() {
-                let to = attacks.poplsb();
+            for to in attacks.lsb_iter() {
                 mv_list.push(ChessMove::new(from as u16, to as u16, 0, 0));
             }
         }
@@ -165,9 +158,8 @@ impl ChessBoard {
         };
         let from = self.piece_bb[Piece::from((PieceType::King, self.turn))].lsb() as u8;
 
-        let mut attacks = target_squares & get_king_attacks(from);
-        while !attacks.is_empty() {
-            let to = attacks.poplsb();
+        let attacks = target_squares & get_king_attacks(from);
+        for to in attacks.lsb_iter() {
             mv_list.push(ChessMove::new(from as u16, to as u16, 0, 0));
         }
     }
@@ -181,36 +173,27 @@ impl ChessBoard {
         let occupied_squares = self.side_bb[self.turn] | self.side_bb[!self.turn];
 
         // abstraction
-        let mut bishops = self.piece_bb[Piece::from((PieceType::Bishop, self.turn))];
+        let bishops = self.piece_bb[Piece::from((PieceType::Bishop, self.turn))];
 
-        while !bishops.is_empty() {
-            let from = bishops.poplsb() as u8;
-
-            let mut attacks = target_squares & get_bishop_attacks(from, occupied_squares);
-            while !attacks.is_empty() {
-                let to = attacks.poplsb();
+        for from in bishops.lsb_iter() {
+            let attacks = target_squares & get_bishop_attacks(from as u8, occupied_squares);
+            for to in attacks.lsb_iter() {
                 mv_list.push(ChessMove::new(from as u16, to as u16, 0, 0));
             }
         }
 
-        let mut rooks = self.piece_bb[Piece::from((PieceType::Rook, self.turn))];
-        while !rooks.is_empty() {
-            let from = rooks.poplsb() as u8;
-
-            let mut attacks = target_squares & get_rook_attacks(from, occupied_squares);
-            while !attacks.is_empty() {
-                let to = attacks.poplsb();
+        let rooks = self.piece_bb[Piece::from((PieceType::Rook, self.turn))];
+        for from in rooks.lsb_iter() {
+            let attacks = target_squares & get_rook_attacks(from as u8, occupied_squares);
+            for to in attacks.lsb_iter() {
                 mv_list.push(ChessMove::new(from as u16, to as u16, 0, 0));
             }
         }
 
-        let mut queens = self.piece_bb[Piece::from((PieceType::Queen, self.turn))];
-        while !queens.is_empty() {
-            let from = queens.poplsb() as u8;
-
-            let mut attacks = target_squares & get_queen_attacks(from, occupied_squares);
-            while !attacks.is_empty() {
-                let to = attacks.poplsb();
+        let queens = self.piece_bb[Piece::from((PieceType::Queen, self.turn))];
+        for from in queens.lsb_iter() {
+            let attacks = target_squares & get_queen_attacks(from as u8, occupied_squares);
+            for to in attacks.lsb_iter() {
                 mv_list.push(ChessMove::new(from as u16, to as u16, 0, 0));
             }
         }

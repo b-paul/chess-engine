@@ -26,13 +26,8 @@ pub enum CastlingRight {
     BlackQueen,
 }
 
+#[derive(Default)]
 pub struct CastlingRights(u8);
-
-impl Default for CastlingRights {
-    fn default() -> Self {
-        CastlingRights(0)
-    }
-}
 
 impl CastlingRights {
     pub fn set_right(&mut self, right: CastlingRight) {
@@ -44,7 +39,7 @@ impl CastlingRights {
                 CastlingRight::BlackQueen => 3,
             }
     }
-    pub fn unset_right(&mut self, right: CastlingRight) {
+    pub fn _unset_right(&mut self, right: CastlingRight) {
         self.0 &= !(1
             << match right {
                 CastlingRight::WhiteKing => 0,

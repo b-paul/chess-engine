@@ -1,14 +1,10 @@
 use std::ops::*;
 
-// TODO make u64 not pub
 /// The Bitboard type is a redefined u64 which has added helper functions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Bitboard(u64);
 
 impl Bitboard {
-    // TODO
-    // initialization methods (like create a bitboard which is one bit or somehting)
-
     pub fn empty() -> Self {
         Bitboard(0)
     }
@@ -18,10 +14,6 @@ impl Bitboard {
         debug_assert!(sq <= 63);
 
         Bitboard(1 << sq)
-    }
-
-    pub fn from_u64(bb: u64) -> Self {
-        Bitboard(bb)
     }
 
     /// Set a bit on the given bitboard
@@ -91,10 +83,7 @@ impl Bitboard {
     pub fn shift1(self, shift: i8) -> Bitboard {
         let mut result = self;
         if shift < 0 {
-            const MASKS: [u64; 2] = [
-                !0x0101010101010101,
-                !0x8080808080808080,
-            ];
+            const MASKS: [u64; 2] = [!0x0101010101010101, !0x8080808080808080];
             let mask = if shift % 8 == 0 {
                 !0
             } else if shift % 8 == -1 {
@@ -106,10 +95,7 @@ impl Bitboard {
             };
             result.0 = (self.0 & mask).overflowing_shr(-shift as u32).0;
         } else {
-            const MASKS: [u64; 2] = [
-                !0x8080808080808080,
-                !0x0101010101010101,
-            ];
+            const MASKS: [u64; 2] = [!0x8080808080808080, !0x0101010101010101];
             let mask = if shift % 8 == 0 {
                 !0
             } else if shift % 8 == 1 {
@@ -137,8 +123,19 @@ impl Bitboard {
         }
         println!();
     }
+
+    pub fn lsb_iter(self) -> LsbIter {
+        LsbIter { bb: self }
+    }
 }
 
+impl From<u64> for Bitboard {
+    fn from(b: u64) -> Bitboard {
+        Bitboard(b)
+    }
+}
+
+// this should not be here
 #[inline]
 pub fn sq(r: u8, f: u8) -> u8 {
     r * 8 + f
@@ -178,6 +175,24 @@ impl Not for Bitboard {
     type Output = Self;
     fn not(self) -> Self::Output {
         Self(self.0.not())
+    }
+}
+
+// LSB iterator
+// Iterate over the index of each bit starting from the least significant bit
+// I'll do proper docs later
+pub struct LsbIter {
+    bb: Bitboard,
+}
+
+impl Iterator for LsbIter {
+    type Item = u32;
+    fn next(&mut self) -> Option<u32> {
+        if !self.bb.is_empty() {
+            Some(self.bb.poplsb())
+        } else {
+            None
+        }
     }
 }
 

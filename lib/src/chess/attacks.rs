@@ -2,12 +2,12 @@ use crate::bitboards::Bitboard;
 
 #[inline]
 pub fn get_knight_attacks(sq: u8) -> Bitboard {
-    Bitboard::from_u64(KNIGHT_ATTACKS[sq as usize])
+    KNIGHT_ATTACKS[sq as usize].into()
 }
 
 #[inline]
 pub fn get_king_attacks(sq: u8) -> Bitboard {
-    Bitboard::from_u64(KING_ATTACKS[sq as usize])
+    KING_ATTACKS[sq as usize].into()
 }
 
 #[inline]
